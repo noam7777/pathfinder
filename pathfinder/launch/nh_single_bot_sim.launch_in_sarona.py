@@ -8,6 +8,7 @@ from launch.actions import IncludeLaunchDescription, DeclareLaunchArgument, Regi
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.event_handlers import OnExecutionComplete
 from launch_ros.actions import Node
+from launch.actions import ExecuteProcess
 
 
 def generate_launch_description():
@@ -23,6 +24,22 @@ def generate_launch_description():
         executable='robot_state_publisher',
         output='screen',
         parameters=[{'robot_description': urdf.toxml()}]
+    )
+
+    # Launch RViz2 with a configuration that includes the RobotModel display
+    rviz_config_file = os.path.join(pkg_pathfinder,'config','view_lidar_sim.rviz')
+    rviz_node = Node(
+        package='rviz2',
+        executable='rviz2',
+        name='rviz2',
+        output='screen',
+        arguments=['-d', rviz_config_file]
+    )
+
+    # Launch teleop_twist_keyboard node using ExecuteProcess
+    teleop_node = ExecuteProcess(
+        cmd=['xterm', '-e', 'ros2 run teleop_twist_keyboard teleop_twist_keyboard'],
+        output='screen'
     )
 
     # Include the Gazebo launch file, provided by the gazebo_ros package
@@ -74,4 +91,6 @@ def generate_launch_description():
         ),
         spawn_entity,
         slam,
+        rviz_node,
+        teleop_node,
     ])
